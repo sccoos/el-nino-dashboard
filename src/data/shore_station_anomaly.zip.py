@@ -78,7 +78,8 @@ TEMPERATURE_VARIABLE_CANDIDATES = [
     "sea_water_temperature",
     "sea_water_temperature_ctd",
 ]
-TEMPERATURE_EXCLUDE_ABOVE = 30
+TEMPERATURE_EXCLUDE_ABOVE = 28
+TEMPERATURE_EXCLUDE_BELOW = 6
 DOWNLOAD_RETRIES = 3
 RETRY_DELAY_SECONDS = 2
 
@@ -156,6 +157,7 @@ def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str]
     frame[temperature_variable] = pd.to_numeric(frame[temperature_variable], errors="coerce")
     frame = frame.dropna(subset=[TIME_VARIABLE, temperature_variable])
     frame = frame[frame[temperature_variable] <= TEMPERATURE_EXCLUDE_ABOVE]
+    frame = frame[frame[temperature_variable] >= TEMPERATURE_EXCLUDE_BELOW]
     frame = frame.sort_values(TIME_VARIABLE).reset_index(drop=True)
 
     if frame.empty:
