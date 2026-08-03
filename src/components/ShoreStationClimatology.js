@@ -281,6 +281,8 @@ export function ShoreStationClimatology({
                 yScale(row.current_year_daily_mean) -
                 yScale(row.historical_climatology_mean)
               ),
+              rx: 2.5,
+              ry: 2.5,
               fill: anomalyColor(row.year_to_date_anomaly),
               opacity: 0.95
             })
