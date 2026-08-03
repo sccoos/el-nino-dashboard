@@ -123,7 +123,6 @@ def read_csv_with_retries(download_url: str) -> pd.DataFrame:
                 csv_bytes = response.read()
             return pd.read_csv(
                 io.BytesIO(csv_bytes),
-                parse_dates=[TIME_VARIABLE],
                 low_memory=False,
             )
         except (IncompleteRead, HTTPError, URLError, TimeoutError, OSError) as exc:
@@ -153,7 +152,12 @@ def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str]
 
     frame.columns = [column.split(" (", 1)[0] for column in frame.columns]
     frame = frame[[TIME_VARIABLE, temperature_variable]].copy()
-    frame[TIME_VARIABLE] = pd.to_datetime(frame[TIME_VARIABLE], utc=True, errors="coerce")
+    frame[TIME_VARIABLE] = pd.to_datetime(
+        frame[TIME_VARIABLE],
+        format="ISO8601",
+        utc=True,
+        errors="coerce",
+    )
     frame[temperature_variable] = pd.to_numeric(frame[temperature_variable], errors="coerce")
     frame = frame.dropna(subset=[TIME_VARIABLE, temperature_variable])
     frame = frame[frame[temperature_variable] <= TEMPERATURE_EXCLUDE_ABOVE]
