@@ -3,3 +3,4 @@ dist
 src/.observablehq
 .DS_Store
 src/data/shore_station_anomaly.zip
+src/vendor/

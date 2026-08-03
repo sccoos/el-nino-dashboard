@@ -183,7 +183,7 @@ export function ShoreStationClimatology({
         createElement(
           "div",
           {style: colorbarWrapStyle},
-          createElement("span", {style: colorbarLabelStyle}, "Year-to-date anomaly"),
+          createElement("span", {style: colorbarLabelStyle}, "Temperature anomaly (°C)"),
           renderColorbar(plotId, anomalyColor),
           createElement("div", {style: colorbarTicksStyle},
             createElement("span", null, "-4"),

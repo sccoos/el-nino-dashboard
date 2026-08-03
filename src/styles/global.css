@@ -1,3 +1,11 @@
+#observablehq-center,
+#observablehq-main.observablehq,
+#observablehq-main > .observablehq.observablehq--block {
+  margin: 0 !important;
+}
+
 .dashboard-page {
   padding: 24px;
+  display: grid;
+  gap: 24px;
 }
