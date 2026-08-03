@@ -26,6 +26,15 @@ const shoreStationClimatologyPlot = renderSelectableShoreStationClimatology({
 
 const page = document.createElement("div");
 page.className = "dashboard-page";
-page.append(ensoAlertCard, shoreStationClimatologyPlot);
+
+const cardPane = document.createElement("div");
+cardPane.className = "dashboard-card-pane";
+cardPane.append(ensoAlertCard);
+
+const plotPane = document.createElement("div");
+plotPane.className = "dashboard-plot-pane";
+plotPane.append(shoreStationClimatologyPlot);
+
+page.append(cardPane, plotPane);
 display(page);
 ```

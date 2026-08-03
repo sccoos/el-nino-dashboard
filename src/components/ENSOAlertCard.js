@@ -2,6 +2,8 @@ import {createElement} from "npm:react";
 import {createRoot} from "npm:react-dom/client";
 
 export function ENSOAlertCard({status}) {
+  const statusColor = getStatusColor(status);
+
   return createElement(
     "article",
     {
@@ -35,12 +37,22 @@ export function ENSOAlertCard({status}) {
           margin: 0,
           fontSize: "1.35rem",
           fontWeight: 700,
-          color: "#102a43"
+          color: statusColor
         }
       },
       status || "Status unavailable"
     )
   );
+}
+
+function getStatusColor(status) {
+  const normalizedStatus = String(status ?? "").trim().toLowerCase();
+
+  if (normalizedStatus === "el niño advisory") return "#b42318";
+  if (normalizedStatus === "el niño watch") return "#f79009";
+  if (normalizedStatus === "la niña advisory") return "#175cd3";
+  if (normalizedStatus === "la niña watch") return "#56b4ef";
+  return "#102a43";
 }
 
 export function renderENSOAlertCard(data) {

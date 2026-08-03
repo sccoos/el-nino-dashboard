@@ -7,5 +7,19 @@
 .dashboard-page {
   padding: 24px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 24px;
+  max-width: 80vw;
+  margin: 0 auto;
+}
+
+.dashboard-card-pane {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.dashboard-plot-pane {
+  grid-column: 1 / -1;
+  min-width: 0;
 }
