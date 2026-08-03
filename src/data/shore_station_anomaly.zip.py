@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 import time
 import sys
 import zipfile
@@ -105,6 +106,73 @@ def available_variables(info: dict) -> set[str]:
     }
 
 
+def metadata_rows(info: dict) -> tuple[list[str], list[list[object]]]:
+    table = info["table"]
+    return table["columnNames"], table["rows"]
+
+
+def find_attribute_value(
+    info: dict,
+    *,
+    row_type: str,
+    attribute_name: str,
+    variable_name: str | None = None,
+) -> str | None:
+    column_names, rows = metadata_rows(info)
+    row_type_index = column_names.index("Row Type")
+    variable_name_index = column_names.index("Variable Name")
+    attribute_name_index = column_names.index("Attribute Name")
+    value_index = column_names.index("Value")
+
+    for row in rows:
+        if row[row_type_index] != row_type:
+            continue
+        if variable_name is not None and row[variable_name_index] != variable_name:
+            continue
+        if row[attribute_name_index] != attribute_name:
+            continue
+        value = row[value_index]
+        return None if value is None else str(value)
+
+    return None
+
+
+def parse_float_list(value: str | None) -> list[float]:
+    if not value:
+        return []
+    matches = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", value)
+    return [float(match) for match in matches]
+
+
+def extract_coordinate(info: dict, variable_name: str, global_attribute_name: str) -> float | None:
+    variable_actual_range = find_attribute_value(
+        info,
+        row_type="attribute",
+        variable_name=variable_name,
+        attribute_name="actual_range",
+    )
+    values = parse_float_list(variable_actual_range)
+    if values:
+        return sum(values) / len(values)
+
+    global_value = find_attribute_value(
+        info,
+        row_type="global",
+        attribute_name=global_attribute_name,
+    )
+    values = parse_float_list(global_value)
+    if values:
+        return sum(values) / len(values)
+
+    return None
+
+
+def extract_station_coordinates(info: dict) -> tuple[float | None, float | None]:
+    latitude = extract_coordinate(info, "latitude", "geospatial_lat_min")
+    longitude = extract_coordinate(info, "longitude", "geospatial_lon_min")
+    return latitude, longitude
+
+
 def choose_temperature_variable(variables: set[str]) -> str:
     for variable in TEMPERATURE_VARIABLE_CANDIDATES:
         if variable in variables:
@@ -134,10 +202,11 @@ def read_csv_with_retries(download_url: str) -> pd.DataFrame:
     raise RuntimeError(f"Failed to download dataset after {DOWNLOAD_RETRIES} attempts: {last_error}")
 
 
-def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str]:
+def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str, float | None, float | None]:
     info = load_dataset_info(server, dataset_id)
     variables = available_variables(info)
     temperature_variable = choose_temperature_variable(variables)
+    latitude, longitude = extract_station_coordinates(info)
 
     erddap = ERDDAP(
         server=server,
@@ -167,7 +236,7 @@ def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str]
     if frame.empty:
         raise ValueError("Dataset returned no valid temperature observations.")
 
-    return frame, temperature_variable
+    return frame, temperature_variable, latitude, longitude
 
 
 def climatology_day_of_year(series: pd.Series) -> pd.Series:
@@ -289,7 +358,7 @@ def build_archive() -> bytes:
     station_frames = []
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
         for dataset in DATASETS:
-            frame, temperature_variable = fetch_station_data(
+            frame, temperature_variable, latitude, longitude = fetch_station_data(
                 server=dataset["server"],
                 dataset_id=dataset["dataset_id"],
             )
@@ -313,6 +382,8 @@ def build_archive() -> bytes:
                     "dataset_id": dataset["dataset_id"],
                     "server": dataset["server"],
                     "temperature_variable": temperature_variable,
+                    "latitude": latitude,
+                    "longitude": longitude,
                     "rows": int(len(station_daily)),
                     "output_file": "shore_station_climatology.parquet",
                     "start_time": daily["time"].min().isoformat(),
