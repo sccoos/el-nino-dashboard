@@ -1,58 +1,32 @@
-import {createElement, useState} from "npm:react";
+import {createElement} from "npm:react";
 import {createRoot} from "npm:react-dom/client";
 
 export function ENSOAlertCard({status}) {
   const statusColor = getStatusColor(status);
-  const [isHovered, setIsHovered] = useState(false);
 
   return createElement(
     "article",
     {
-      style: {
-        border: "1px solid #d7e3f0",
-        borderRadius: "16px",
-        padding: "1.25rem",
-        background: "linear-gradient(180deg, #ffffff 0%, #f4f8fb 100%)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
-        maxWidth: "320px",
-        fontFamily: '"Avenir Next", "Segoe UI", sans-serif'
-      }
+      className: "enso-alert-card"
     },
     createElement(
       "p",
-      {
-        style: {
-          margin: "0 0 0.5rem",
-          fontSize: "0.78rem",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: "#5b7083"
-        }
-      },
+      {className: "enso-alert-card__eyebrow"},
       "ENSO Alert System Status"
     ),
     createElement(
       "p",
       {
-        style: {
-          margin: 0,
-          fontSize: "1.35rem",
-          fontWeight: 700,
-          color: statusColor
-        }
+        className: "enso-alert-card__status",
+        style: {"--enso-status-color": statusColor}
       },
       createElement(
         "a",
         {
+          className: "enso-alert-card__link",
           href: "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
           target: "_blank",
-          rel: "noreferrer",
-          onMouseEnter: () => setIsHovered(true),
-          onMouseLeave: () => setIsHovered(false),
-          style: {
-            color: "inherit",
-            textDecoration: isHovered ? "underline" : "inherit"
-          }
+          rel: "noreferrer"
         },
         status || "Status unavailable"
       )

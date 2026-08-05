@@ -226,13 +226,13 @@ export function MHWMap({
 
   return createElement(
     "article",
-    {style: cardStyle},
-    createElement("p", {style: eyebrowStyle}, title),
+    {className: "mhw-map-card"},
+    createElement("p", {className: "mhw-map-card__eyebrow"}, title),
     createElement("div", {
       ref: containerRef,
       id: mapId,
+      className: "mhw-map-card__map",
       style: {
-        ...mapStyle,
         ...(height == null ? {height: "100%"} : {height: `${height}px`})
       },
       role: "img",
@@ -250,47 +250,3 @@ export function renderMHWMap(options = {}) {
   container.flyToStation = (stationKey) => apiRef.current?.flyToStation?.(stationKey) ?? false;
   return container;
 }
-
-const cardStyle = {
-  border: "1px solid #d7e3f0",
-  borderRadius: "20px",
-  padding: "1.25rem",
-  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
-  fontFamily: '"Avenir Next", "Segoe UI", sans-serif',
-  height: "100%",
-  boxSizing: "border-box",
-  display: "flex",
-  flexDirection: "column"
-};
-
-const eyebrowStyle = {
-  margin: 0,
-  fontSize: "0.76rem",
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "#5b7083",
-  marginBottom: "0.75rem"
-};
-
-const titleStyle = {
-  margin: "0.25rem 0 0",
-  fontSize: "1.25rem",
-  color: "#102a43"
-};
-
-const descriptionStyle = {
-  margin: "0.45rem 0 0.9rem",
-  fontSize: "0.95rem",
-  color: "#486581"
-};
-
-const mapStyle = {
-  width: "100%",
-  borderRadius: "16px",
-  overflow: "hidden",
-  border: "1px solid #d7e3f0",
-  background: "#dce9f5",
-  minHeight: "280px",
-  flex: "1 1 auto"
-};

@@ -65,9 +65,9 @@ export function WaterTemperatureClimatology({
   if (!normalizedRows.length) {
     return createElement(
       "article",
-      {style: cardStyle},
-      createElement("h3", {style: titleStyle}, stationName),
-      createElement("p", {style: emptyStyle}, "No climatology data available.")
+      {className: "climatology-card"},
+      createElement("h3", {className: "climatology-card__title"}, stationName),
+      createElement("p", {className: "climatology-card__empty"}, "No climatology data available.")
     );
   }
 
@@ -161,20 +161,20 @@ export function WaterTemperatureClimatology({
 
   return createElement(
     "article",
-    {style: cardStyle},
-    createElement("div", {style: headerStyle},
-      createElement("div", {style: headerColumnLeftStyle},
-        createElement("p", {style: eyebrowStyle}, "California Coastal Climatology"),
+    {className: "climatology-card"},
+    createElement("div", {className: "climatology-card__header"},
+      createElement("div", {className: "climatology-card__header-left"},
+        createElement("p", {className: "climatology-card__eyebrow"}, "California Coastal Climatology"),
         stationOptions && onStationChange
           ? createElement(
               "label",
-              {style: stationSelectWrapStyle},
+              {className: "climatology-card__station-select-wrap"},
               createElement(
                 "select",
                 {
                   value: selectedStationKey ?? "",
                   onChange: (event) => onStationChange(event.target.value),
-                  style: stationSelectStyle,
+                  className: "climatology-card__station-select",
                   "aria-label": "Select station"
                 },
                 buildStationOptionGroups(stationOptions).map((group) =>
@@ -198,25 +198,25 @@ export function WaterTemperatureClimatology({
                 )
               )
             )
-          : createElement("h3", {style: titleStyle}, stationName)
+          : createElement("h3", {className: "climatology-card__title"}, stationName)
       ),
       createElement(
         "div",
-        {style: headerColumnCenterStyle},
+        {className: "climatology-card__header-center"},
         createElement(
           "div",
-          {style: colorbarWrapStyle},
-          createElement("span", {style: colorbarLabelStyle}, "Temperature anomaly (°C)"),
+          {className: "climatology-card__colorbar-wrap"},
+          createElement("span", {className: "climatology-card__colorbar-label"}, "Temperature anomaly (°C)"),
           renderColorbar(plotId, anomalyColor),
-          createElement("div", {style: colorbarTicksStyle},
+          createElement("div", {className: "climatology-card__colorbar-ticks"},
             createElement("span", null, "-4"),
             createElement("span", null, "0"),
             createElement("span", null, "4")
           )
         )
       ),
-      createElement("div", {style: headerColumnRightStyle},
-        createElement("div", {style: legendStyle},
+      createElement("div", {className: "climatology-card__header-right"},
+        createElement("div", {className: "climatology-card__legend"},
           legendItem("#111111", "Historical mean", "dashed"),
           legendItem("#111111", "Current year"),
           legendItem("#8a94a6", "Climatology range")
@@ -227,7 +227,7 @@ export function WaterTemperatureClimatology({
       "svg",
       {
         viewBox: `0 0 ${width} ${height}`,
-        style: svgStyle,
+        className: "climatology-card__svg",
         role: "img",
         "aria-labelledby": `${plotId}-title ${plotId}-desc`,
         onMouseLeave: () => handleHoveredDayChange(null),
@@ -584,7 +584,7 @@ function renderColorbar(plotId, anomalyColor) {
 
   return createElement(
     "svg",
-    {viewBox: "0 0 220 14", style: colorbarSvgStyle, "aria-hidden": true},
+    {viewBox: "0 0 220 14", className: "climatology-card__colorbar-svg", "aria-hidden": true},
     createElement(
       "defs",
       null,
@@ -605,10 +605,10 @@ function renderColorbar(plotId, anomalyColor) {
 function legendItem(color, label, style = "solid") {
   return createElement(
     "div",
-    {key: label, style: legendItemStyle},
+    {key: label, className: "climatology-card__legend-item"},
     createElement("span", {
+      className: "climatology-card__legend-swatch",
       style: {
-        ...legendSwatchStyle,
         background: style === "solid" ? color : "transparent",
         border: `2px ${style === "dashed" ? "dashed" : "solid"} ${color}`
       }
@@ -700,141 +700,3 @@ export function renderSelectableWaterTemperatureClimatology({
   container.setStationKey = (stationKey) => apiRef.current?.setStationKey?.(stationKey);
   return container;
 }
-
-const cardStyle = {
-  border: "1px solid #d7e3f0",
-  borderRadius: "20px",
-  padding: "1.25rem",
-  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
-  boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
-  fontFamily: '"Avenir Next", "Segoe UI", sans-serif'
-};
-
-const headerStyle = {
-  display: "grid",
-  gridTemplateColumns: "1fr auto 1fr",
-  gap: "1rem",
-  alignItems: "start",
-  marginBottom: "0.75rem",
-  width: "100%"
-};
-
-const attributionStyle = {
-  margin: 0,
-  fontSize: "0.5rem",
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "#5b7083"
-};
-
-const eyebrowStyle = {
-  margin: 0,
-  fontSize: "0.76rem",
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: "#5b7083"
-};
-
-const titleStyle = {
-  margin: "0.2rem 0 0",
-  fontSize: "1.25rem",
-  color: "#102a43"
-};
-
-const stationSelectWrapStyle = {
-  display: "inline-block",
-  marginTop: "0.2rem"
-};
-
-const stationSelectStyle = {
-  fontSize: "1.25rem",
-  fontWeight: 700,
-  color: "#102a43",
-  border: "1px solid #d7e3f0",
-  borderRadius: "12px",
-  padding: "0.35rem 2.2rem 0.35rem 0.75rem",
-  background: "#ffffff",
-  boxShadow: "0 8px 22px rgba(15, 23, 42, 0.05)",
-  fontFamily: '"Avenir Next", "Segoe UI", sans-serif'
-};
-
-const svgStyle = {
-  width: "100%",
-  height: "auto",
-  display: "block",
-  overflow: "visible",
-  cursor: "crosshair"
-};
-
-const legendStyle = {
-  display: "flex",
-  gap: "0.85rem",
-  flexWrap: "wrap",
-  fontSize: "0.85rem",
-  color: "#334e68"
-};
-
-const headerColumnLeftStyle = {
-  justifySelf: "start",
-  minWidth: 0
-};
-
-const headerColumnCenterStyle = {
-  justifySelf: "center",
-  display: "flex",
-  justifyContent: "center",
-  minWidth: 0
-};
-
-const headerColumnRightStyle = {
-  justifySelf: "end",
-  display: "flex",
-  justifyContent: "flex-end",
-  minWidth: 0
-};
-
-const colorbarWrapStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: "0.35rem",
-  marginBottom: "0.75rem"
-};
-
-const colorbarLabelStyle = {
-  fontSize: "0.84rem",
-  color: "#334e68",
-  fontWeight: 600
-};
-
-const colorbarSvgStyle = {
-  width: "220px",
-  height: "14px",
-  display: "block"
-};
-
-const colorbarTicksStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  width: "220px",
-  fontSize: "0.75rem",
-  color: "#5b7083"
-};
-
-const legendItemStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.45rem"
-};
-
-const legendSwatchStyle = {
-  width: "12px",
-  height: "12px",
-  borderRadius: "999px",
-  display: "inline-block"
-};
-
-const emptyStyle = {
-  margin: 0,
-  color: "#5b7083"
-};
