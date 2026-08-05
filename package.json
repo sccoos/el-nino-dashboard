@@ -5,7 +5,9 @@
   "scripts": {
     "clean": "rimraf src/.observablehq/cache",
     "build": "observable build",
+    "build:shore-station-data": "python3 src/data/shore_station_anomaly.zip.py > /tmp/shore_station_anomaly.zip && mv /tmp/shore_station_anomaly.zip src/data/shore_station_anomaly.zip",
     "dev": "observable preview",
+    "dev:refresh": "npm run build:shore-station-data && observable preview",
     "deploy": "observable deploy",
     "observable": "observable",
     "install": "pip3 install -r requirements.txt",

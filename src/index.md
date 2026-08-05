@@ -5,7 +5,7 @@ sql:
 
 ```js
 import {renderENSOAlertCard} from "./components/ENSOAlertCard.js";
-import {renderSelectableShoreStationClimatology} from "./components/ShoreStationClimatology.js";
+import {renderSelectableWaterTemperatureClimatology} from "./components/WaterTemperatureClimatologies.js";
 
 const ensoAlertStatus = await FileAttachment("data/ENSO_alert_status.json").json();
 const ensoAlertCard = renderENSOAlertCard(ensoAlertStatus);
@@ -15,10 +15,14 @@ const shoreStationRowsByKey = Object.groupBy(shoreStationRows, (row) => row.stat
 const shoreStationOptions = shoreStationManifest.stations
   .map((station) => ({
     key: station.station_key,
-    name: station.name
+    name: station.name,
+    type: station.type,
+    source_url: station.source_url,
+    historical_climatology_start_year: station.historical_climatology_start_year,
+    historical_climatology_end_year: station.historical_climatology_end_year
   }))
   .filter((station) => shoreStationRowsByKey[station.key]?.length);
-const shoreStationClimatologyPlot = renderSelectableShoreStationClimatology({
+const shoreStationClimatologyPlot = renderSelectableWaterTemperatureClimatology({
   stationRowsByKey: shoreStationRowsByKey,
   stationOptions: shoreStationOptions,
   initialStationKey: "humboldt"

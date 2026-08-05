@@ -34,12 +34,16 @@ function lineOrNull(line, data) {
   return path ?? null;
 }
 
-export function ShoreStationClimatology({
+export function WaterTemperatureClimatology({
   rows,
   stationName = "Shore Station",
   stationOptions = null,
   selectedStationKey = null,
   onStationChange = null,
+  stationType = null,
+  historicalStartYear = null,
+  historicalEndYear = null,
+  sourceUrl = null,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
   margin = DEFAULT_MARGIN
@@ -150,7 +154,7 @@ export function ShoreStationClimatology({
     {style: cardStyle},
     createElement("div", {style: headerStyle},
       createElement("div", {style: headerColumnLeftStyle},
-        createElement("p", {style: eyebrowStyle}, "Shore Station Climatology"),
+        createElement("p", {style: eyebrowStyle}, "Water Temperature Climatology"),
         stationOptions && onStationChange
           ? createElement(
               "label",
@@ -161,16 +165,25 @@ export function ShoreStationClimatology({
                   value: selectedStationKey ?? "",
                   onChange: (event) => onStationChange(event.target.value),
                   style: stationSelectStyle,
-                  "aria-label": "Select shore station"
+                  "aria-label": "Select station"
                 },
-                stationOptions.map((station) =>
+                buildStationOptionGroups(stationOptions).map((group) =>
                   createElement(
-                    "option",
+                    "optgroup",
                     {
-                      key: station.key,
-                      value: station.key
+                      key: group.type,
+                      label: group.type
                     },
-                    station.name
+                    group.stations.map((station) =>
+                      createElement(
+                        "option",
+                        {
+                          key: station.key,
+                          value: station.key
+                        },
+                        station.name
+                      )
+                    )
                   )
                 )
               )
@@ -428,6 +441,30 @@ export function ShoreStationClimatology({
         }
       }
       )
+    ),
+    createElement("div", {style: footerStyle},
+      createElement(
+        "p",
+        {style: footerTextStyle},
+        `Historic climatology calculated from: ${formatYearRange(historicalStartYear, historicalEndYear)}`
+      ),
+      createElement(
+        "p",
+        {style: footerTextStyle},
+        "Source: ",
+        sourceUrl
+          ? createElement(
+              "a",
+              {
+                href: sourceUrl,
+                target: "_blank",
+                rel: "noreferrer",
+                style: sourceLinkStyle
+              },
+              sourceUrl
+            )
+          : "Unavailable"
+      )
     )
   );
 }
@@ -436,8 +473,20 @@ function clampDay(day) {
   return Math.max(1, Math.min(366, day));
 }
 
-function buildAnomalySegments(rows) {
-  return rows;
+function buildStationOptionGroups(stationOptions) {
+  const groups = new Map();
+  for (const station of stationOptions) {
+    const type = station.type ?? "Other";
+    if (!groups.has(type)) groups.set(type, []);
+    groups.get(type).push(station);
+  }
+
+  return Array.from(groups.entries())
+    .map(([type, stations]) => ({
+      type,
+      stations: [...stations].sort((a, b) => a.name.localeCompare(b.name))
+    }))
+    .sort((a, b) => a.type.localeCompare(b.type));
 }
 
 function firstFiniteValue(values) {
@@ -465,6 +514,12 @@ function formatTooltipDate(row) {
 
 function formatFocusYear(row) {
   return Number.isFinite(row.year) ? String(row.year) : "Current year";
+}
+
+function formatYearRange(startYear, endYear) {
+  return Number.isFinite(startYear) && Number.isFinite(endYear)
+    ? `${startYear} - ${endYear}`
+    : "Unavailable";
 }
 
 function tooltipTransform(x, y, innerWidth) {
@@ -545,14 +600,14 @@ function legendItem(color, label, style = "solid") {
   );
 }
 
-export function renderShoreStationClimatology(rows, options = {}) {
+export function renderWaterTemperatureClimatology(rows, options = {}) {
   const container = document.createElement("div");
   const root = createRoot(container);
-  root.render(createElement(ShoreStationClimatology, {...options, rows}));
+  root.render(createElement(WaterTemperatureClimatology, {...options, rows}));
   return container;
 }
 
-function SelectableShoreStationClimatology({
+function SelectableWaterTemperatureClimatology({
   stationRowsByKey,
   stationOptions,
   initialStationKey,
@@ -565,19 +620,23 @@ function SelectableShoreStationClimatology({
   const selectedStation = stationOptions.find((station) => station.key === selectedStationKey) ?? stationOptions[0];
   const rows = selectedStation ? stationRowsByKey[selectedStation.key] ?? [] : [];
 
-  return createElement(ShoreStationClimatology, {
+  return createElement(WaterTemperatureClimatology, {
     rows,
-    stationName: selectedStation?.name ?? "Shore Station",
+    stationName: selectedStation?.name ?? "Station",
     stationOptions,
     selectedStationKey: selectedStation?.key ?? null,
     onStationChange: setSelectedStationKey,
+    stationType: selectedStation?.type ?? null,
+    historicalStartYear: selectedStation?.historical_climatology_start_year ?? null,
+    historicalEndYear: selectedStation?.historical_climatology_end_year ?? null,
+    sourceUrl: selectedStation?.source_url ?? null,
     width,
     height,
     margin
   });
 }
 
-export function renderSelectableShoreStationClimatology({
+export function renderSelectableWaterTemperatureClimatology({
   stationRowsByKey,
   stationOptions,
   initialStationKey = null,
@@ -588,7 +647,7 @@ export function renderSelectableShoreStationClimatology({
   const container = document.createElement("div");
   const root = createRoot(container);
   root.render(
-    createElement(SelectableShoreStationClimatology, {
+    createElement(SelectableWaterTemperatureClimatology, {
       stationRowsByKey,
       stationOptions,
       initialStationKey,
@@ -727,4 +786,25 @@ const legendSwatchStyle = {
 const emptyStyle = {
   margin: 0,
   color: "#5b7083"
+};
+
+const footerStyle = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: "0.2rem",
+  marginTop: "0.85rem"
+};
+
+const footerTextStyle = {
+  margin: 0,
+  fontSize: "0.82rem",
+  lineHeight: 1.4,
+  color: "#486581"
+};
+
+const sourceLinkStyle = {
+  color: "#486581",
+  textDecoration: "none",
+  wordBreak: "break-all"
 };
