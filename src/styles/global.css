@@ -1,3 +1,5 @@
+@import "../vendor/maplibre-gl.css";
+
 #observablehq-center,
 #observablehq-main.observablehq,
 #observablehq-main > .observablehq.observablehq--block {
@@ -7,19 +9,28 @@
 .dashboard-page {
   padding: 24px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(220px, 20%) minmax(0, 80%);
   align-items: start;
-  gap: 24px;
-  max-width: 80vw;
+  gap: 16px;
+  max-width: 100vw;
   margin: 0 auto;
 }
 
 .dashboard-card-pane {
   grid-column: 2;
+  grid-row: 1;
   justify-self: end;
 }
 
+.dashboard-map-pane {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  align-self: stretch;
+}
+
 .dashboard-plot-pane {
-  grid-column: 1 / -1;
+  grid-column: 2;
+  grid-row: 2;
   min-width: 0;
 }

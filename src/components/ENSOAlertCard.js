@@ -1,8 +1,9 @@
-import {createElement} from "npm:react";
+import {createElement, useState} from "npm:react";
 import {createRoot} from "npm:react-dom/client";
 
 export function ENSOAlertCard({status}) {
   const statusColor = getStatusColor(status);
+  const [isHovered, setIsHovered] = useState(false);
 
   return createElement(
     "article",
@@ -40,7 +41,21 @@ export function ENSOAlertCard({status}) {
           color: statusColor
         }
       },
-      status || "Status unavailable"
+      createElement(
+        "a",
+        {
+          href: "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+          target: "_blank",
+          rel: "noreferrer",
+          onMouseEnter: () => setIsHovered(true),
+          onMouseLeave: () => setIsHovered(false),
+          style: {
+            color: "inherit",
+            textDecoration: isHovered ? "underline" : "inherit"
+          }
+        },
+        status || "Status unavailable"
+      )
     )
   );
 }

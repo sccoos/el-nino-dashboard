@@ -154,7 +154,7 @@ export function WaterTemperatureClimatology({
     {style: cardStyle},
     createElement("div", {style: headerStyle},
       createElement("div", {style: headerColumnLeftStyle},
-        createElement("p", {style: eyebrowStyle}, "Water Temperature Climatology"),
+        createElement("p", {style: eyebrowStyle}, "California Coastal Climatology"),
         stationOptions && onStationChange
           ? createElement(
               "label",
@@ -219,7 +219,21 @@ export function WaterTemperatureClimatology({
         viewBox: `0 0 ${width} ${height}`,
         style: svgStyle,
         role: "img",
-        "aria-labelledby": `${plotId}-title ${plotId}-desc`
+        "aria-labelledby": `${plotId}-title ${plotId}-desc`,
+        onMouseLeave: () => setHoveredDay(null),
+        onMouseMove: (event) => {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const svgX = ((event.clientX - bounds.left) / bounds.width) * width;
+          const plotX = svgX - margin.left;
+
+          if (plotX < 0 || plotX > innerWidth) {
+            setHoveredDay(null);
+            return;
+          }
+
+          const day = clampDay(Math.round(xScale.invert(plotX)));
+          setHoveredDay(day);
+        }
       },
       createElement("title", {id: `${plotId}-title`}, `${stationName} climatology plot`),
       createElement(
@@ -422,48 +436,34 @@ export function WaterTemperatureClimatology({
           fill: "#102a43",
           fontSize: 12,
           fontWeight: 600
-        }, "Water Temperature (°C)")
-      ),
-      createElement("rect", {
-        x: margin.left,
-        y: margin.top,
-        width: innerWidth,
-        height: innerHeight,
-        fill: "transparent",
-        style: {cursor: "crosshair"},
-        onMouseLeave: () => setHoveredDay(null),
-        onMouseMove: (event) => {
-          const bounds = event.currentTarget.getBoundingClientRect();
-          const relativeX = event.clientX - bounds.left;
-          const scaledX = (relativeX / bounds.width) * innerWidth;
-          const day = clampDay(Math.round(xScale.invert(scaledX)));
-          setHoveredDay(day);
-        }
-      }
-      )
-    ),
-    createElement("div", {style: footerStyle},
-      createElement(
-        "p",
-        {style: footerTextStyle},
-        `Historic climatology calculated from: ${formatYearRange(historicalStartYear, historicalEndYear)}`
-      ),
-      createElement(
-        "p",
-        {style: footerTextStyle},
-        "Source: ",
-        sourceUrl
-          ? createElement(
-              "a",
-              {
-                href: sourceUrl,
-                target: "_blank",
-                rel: "noreferrer",
-                style: sourceLinkStyle
-              },
-              sourceUrl
-            )
-          : "Unavailable"
+        }, "Water Temperature (°C)"),
+        createElement("text", {
+          x: 8,
+          y: innerHeight - 20,
+          fill: "#486581",
+          fontSize: "0.5rem"
+        }, `Historic climatology calculated from: ${formatYearRange(historicalStartYear, historicalEndYear)}`),
+        createElement(
+          "text",
+          {
+            x: 8,
+            y: innerHeight - 8,
+            fill: "#486581",
+            fontSize: "0.5rem"
+          },
+          "Source: ",
+          sourceUrl
+            ? createElement(
+                "a",
+                {
+                  href: sourceUrl,
+                  target: "_blank",
+                  rel: "noreferrer"
+                },
+                sourceUrl
+              )
+            : "Unavailable"
+        )
       )
     )
   );
@@ -677,6 +677,14 @@ const headerStyle = {
   width: "100%"
 };
 
+const attributionStyle = {
+  margin: 0,
+  fontSize: "0.5rem",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "#5b7083"
+};
+
 const eyebrowStyle = {
   margin: 0,
   fontSize: "0.76rem",
@@ -712,7 +720,8 @@ const svgStyle = {
   width: "100%",
   height: "auto",
   display: "block",
-  overflow: "visible"
+  overflow: "visible",
+  cursor: "crosshair"
 };
 
 const legendStyle = {
@@ -786,25 +795,4 @@ const legendSwatchStyle = {
 const emptyStyle = {
   margin: 0,
   color: "#5b7083"
-};
-
-const footerStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-start",
-  gap: "0.2rem",
-  marginTop: "0.85rem"
-};
-
-const footerTextStyle = {
-  margin: 0,
-  fontSize: "0.82rem",
-  lineHeight: 1.4,
-  color: "#486581"
-};
-
-const sourceLinkStyle = {
-  color: "#486581",
-  textDecoration: "none",
-  wordBreak: "break-all"
 };

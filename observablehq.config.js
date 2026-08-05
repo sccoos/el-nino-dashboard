@@ -8,5 +8,5 @@ export default {
   footer: false,
   pager: false,
   toc: false,
-  globalStylesheets: ["./styles/global.css", "./vendor/leaflet.css"]
+  globalStylesheets: ["./styles/global.css"]
 };
