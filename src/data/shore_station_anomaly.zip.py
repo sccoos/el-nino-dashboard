@@ -19,68 +19,98 @@ from erddapy import ERDDAP
 DATASETS = [
     {
         "name": "Humboldt",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "edu_humboldt_humboldt",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Santa Cruz Wharf",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "edu_ucsc_scwharf1",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Trinidad Head",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "edu_humboldt_tdp",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Bodega Bay",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "bodega-bay-bml_wts",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Morro Bay",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "edu_calpoly_marine_morro",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Moss Landing",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "mlml_mlml_sea",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Tiburon",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "tiburon-water-tibc1",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
         "name": "Newport Pier",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "newport-pier-automated-shore-sta",
+        "temperature_field": "sea_water_temperature_ctd",
+        "temperature_qc_field": "sea_water_temperature_ctd_qc_agg",
     },
     {
         "name": "Scripps Pier",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "scripps-pier-automated-shore-sta-1",
+        "temperature_field": "sea_water_temperature_ctd",
+        "temperature_qc_field": "sea_water_temperature_ctd_qc_agg",
     },
     {
         "name": "Stearns Wharf",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "stearns-wharf-automated-shore-st-1",
+        "temperature_field": "sea_water_temperature_ctd",
+        "temperature_qc_field": "sea_water_temperature_ctd_qc_agg",
     },
     {
         "name": "Santa Monica Pier",
+        "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
         "dataset_id": "santa-monica-pier-automated-shor-1",
+        "temperature_field": "sea_water_temperature_ctd",
+        "temperature_qc_field": "sea_water_temperature_ctd_qc_agg",
     },
 ]
 
 TIME_VARIABLE = "time"
-TEMPERATURE_VARIABLE_CANDIDATES = [
-    "sea_water_temperature",
-    "sea_water_temperature_ctd",
-]
-TEMPERATURE_EXCLUDE_ABOVE = 28
-TEMPERATURE_EXCLUDE_BELOW = 6
+# TEMPERATURE_EXCLUDE_ABOVE = 28
+# TEMPERATURE_EXCLUDE_BELOW = 6
+VALID_TEMPERATURE_QC_FLAGS = {1, 3}
 DOWNLOAD_RETRIES = 3
 RETRY_DELAY_SECONDS = 2
 
@@ -145,6 +175,15 @@ def parse_float_list(value: str | None) -> list[float]:
 
 
 def extract_coordinate(info: dict, variable_name: str, global_attribute_name: str) -> float | None:
+    global_value = find_attribute_value(
+        info,
+        row_type="global",
+        attribute_name=global_attribute_name,
+    )
+    values = parse_float_list(global_value)
+    if values:
+        return sum(values) / len(values)
+
     variable_actual_range = find_attribute_value(
         info,
         row_type="attribute",
@@ -155,15 +194,6 @@ def extract_coordinate(info: dict, variable_name: str, global_attribute_name: st
     if values:
         return sum(values) / len(values)
 
-    global_value = find_attribute_value(
-        info,
-        row_type="global",
-        attribute_name=global_attribute_name,
-    )
-    values = parse_float_list(global_value)
-    if values:
-        return sum(values) / len(values)
-
     return None
 
 
@@ -171,17 +201,6 @@ def extract_station_coordinates(info: dict) -> tuple[float | None, float | None]
     latitude = extract_coordinate(info, "latitude", "geospatial_lat_min")
     longitude = extract_coordinate(info, "longitude", "geospatial_lon_min")
     return latitude, longitude
-
-
-def choose_temperature_variable(variables: set[str]) -> str:
-    for variable in TEMPERATURE_VARIABLE_CANDIDATES:
-        if variable in variables:
-            return variable
-    raise ValueError(
-        "No supported temperature variable found. "
-        f"Expected one of {TEMPERATURE_VARIABLE_CANDIDATES}."
-    )
-
 
 def read_csv_with_retries(download_url: str) -> pd.DataFrame:
     last_error = None
@@ -202,11 +221,30 @@ def read_csv_with_retries(download_url: str) -> pd.DataFrame:
     raise RuntimeError(f"Failed to download dataset after {DOWNLOAD_RETRIES} attempts: {last_error}")
 
 
-def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str, float | None, float | None]:
+def fetch_station_data(
+    dataset: dict,
+) -> tuple[pd.DataFrame, str, str | None, float | None, float | None]:
+    server = dataset["server"]
+    dataset_id = dataset["dataset_id"]
+    temperature_variable = dataset["temperature_field"]
+    temperature_qc_variable = dataset.get("temperature_qc_field")
+
     info = load_dataset_info(server, dataset_id)
     variables = available_variables(info)
-    temperature_variable = choose_temperature_variable(variables)
     latitude, longitude = extract_station_coordinates(info)
+
+    if temperature_variable not in variables:
+        raise ValueError(
+            f"Configured temperature_field '{temperature_variable}' was not found in {dataset_id}."
+        )
+
+    qc_variable = None
+    if temperature_qc_variable and str(temperature_qc_variable).upper() != "NA":
+        if temperature_qc_variable not in variables:
+            raise ValueError(
+                f"Configured temperature_qc_field '{temperature_qc_variable}' was not found in {dataset_id}."
+            )
+        qc_variable = temperature_qc_variable
 
     erddap = ERDDAP(
         server=server,
@@ -215,12 +253,17 @@ def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str,
     )
     erddap.dataset_id = dataset_id
     erddap.variables = [TIME_VARIABLE, temperature_variable]
+    if qc_variable:
+        erddap.variables.append(qc_variable)
 
     download_url = erddap.get_download_url(response="csv")
     frame = read_csv_with_retries(download_url)
 
     frame.columns = [column.split(" (", 1)[0] for column in frame.columns]
-    frame = frame[[TIME_VARIABLE, temperature_variable]].copy()
+    selected_columns = [TIME_VARIABLE, temperature_variable]
+    if qc_variable:
+        selected_columns.append(qc_variable)
+    frame = frame[selected_columns].copy()
     frame[TIME_VARIABLE] = pd.to_datetime(
         frame[TIME_VARIABLE],
         format="ISO8601",
@@ -228,15 +271,19 @@ def fetch_station_data(server: str, dataset_id: str) -> tuple[pd.DataFrame, str,
         errors="coerce",
     )
     frame[temperature_variable] = pd.to_numeric(frame[temperature_variable], errors="coerce")
+    if qc_variable:
+        frame[qc_variable] = pd.to_numeric(frame[qc_variable], errors="coerce")
     frame = frame.dropna(subset=[TIME_VARIABLE, temperature_variable])
-    frame = frame[frame[temperature_variable] <= TEMPERATURE_EXCLUDE_ABOVE]
-    frame = frame[frame[temperature_variable] >= TEMPERATURE_EXCLUDE_BELOW]
+    if qc_variable:
+        frame = frame[frame[qc_variable].isin(VALID_TEMPERATURE_QC_FLAGS)]
+    # frame = frame[frame[temperature_variable] <= TEMPERATURE_EXCLUDE_ABOVE]
+    # frame = frame[frame[temperature_variable] >= TEMPERATURE_EXCLUDE_BELOW]
     frame = frame.sort_values(TIME_VARIABLE).reset_index(drop=True)
 
     if frame.empty:
         raise ValueError("Dataset returned no valid temperature observations.")
 
-    return frame, temperature_variable, latitude, longitude
+    return frame, temperature_variable, qc_variable, latitude, longitude
 
 
 def climatology_day_of_year(series: pd.Series) -> pd.Series:
@@ -350,7 +397,8 @@ def build_archive() -> bytes:
             "historical_climatology_mean excludes the current year.",
             "current_year_daily_mean is the current year's daily_mean for that day_of_year when available.",
             "year_to_date_anomaly is current_year_daily_mean minus the historical climatological daily mean for the same day_of_year.",
-            f"Raw ERDDAP temperature values > {TEMPERATURE_EXCLUDE_ABOVE} are excluded before aggregation.",
+            f"Only observations with temperature QC flags in {sorted(VALID_TEMPERATURE_QC_FLAGS)} are retained when a temperature_qc_field is configured.",
+            "Raw temperature threshold filters are currently disabled in code.",
         ],
     }
 
@@ -358,26 +406,26 @@ def build_archive() -> bytes:
     station_frames = []
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
         for dataset in DATASETS:
-            frame, temperature_variable, latitude, longitude = fetch_station_data(
-                server=dataset["server"],
-                dataset_id=dataset["dataset_id"],
-            )
+            frame, temperature_variable, temperature_qc_variable, latitude, longitude = fetch_station_data(dataset)
             daily = build_daily_products(frame, temperature_variable)
 
             slug = station_slug(dataset)
             parquet_station_name = f"{slug}.parquet"
             station_daily = daily.assign(
                 station_name=dataset.get("name", dataset["dataset_id"]),
+                station_type=dataset["type"],
                 station_key=slug,
                 dataset_id=dataset["dataset_id"],
                 server=dataset["server"],
                 temperature_variable=temperature_variable,
+                temperature_qc_variable=temperature_qc_variable,
             )
             station_frames.append(station_daily)
 
             manifest["stations"].append(
                 {
                     "name": dataset.get("name", dataset["dataset_id"]),
+                    "type": dataset["type"],
                     "station_key": slug,
                     "dataset_id": dataset["dataset_id"],
                     "server": dataset["server"],
