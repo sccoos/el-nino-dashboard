@@ -19,6 +19,7 @@ const shoreStationOptions = shoreStationManifest.stations
     key: station.station_key,
     name: station.name,
     type: station.type,
+    latitude: station.latitude,
     source_url: station.source_url,
     historical_climatology_start_year: station.historical_climatology_start_year,
     historical_climatology_end_year: station.historical_climatology_end_year

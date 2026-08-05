@@ -494,9 +494,16 @@ function buildStationOptionGroups(stationOptions) {
   return Array.from(groups.entries())
     .map(([type, stations]) => ({
       type,
-      stations: [...stations].sort((a, b) => a.name.localeCompare(b.name))
+      stations: [...stations].sort((a, b) => {
+        const latitudeDifference = toSortableLatitude(b.latitude) - toSortableLatitude(a.latitude);
+        return latitudeDifference || a.name.localeCompare(b.name);
+      })
     }))
     .sort((a, b) => a.type.localeCompare(b.type));
+}
+
+function toSortableLatitude(value) {
+  return Number.isFinite(Number(value)) ? Number(value) : -Infinity;
 }
 
 function firstFiniteValue(values) {

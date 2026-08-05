@@ -17,8 +17,7 @@ const DEFAULT_STYLE = {
     },
     californiaCounties: {
       type: "geojson",
-      data: CALIFORNIA_COUNTIES_GEOJSON_URL,
-      attribution: "California county boundaries: CA Department of Finance"
+      data: CALIFORNIA_COUNTIES_GEOJSON_URL
     }
   },
   layers: [
