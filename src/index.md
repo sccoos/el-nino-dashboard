@@ -10,7 +10,7 @@ import {renderSelectableWaterTemperatureClimatology} from "./components/WaterTem
 
 const ensoAlertStatus = await FileAttachment("data/ENSO_alert_status.json").json();
 const ensoAlertCard = renderENSOAlertCard(ensoAlertStatus);
-const maplibreWorkerUrl = await FileAttachment("./vendor/maplibre-gl-worker.bundle.js").url();
+const maplibreWorkerUrl = await FileAttachment("data/maplibre-gl-worker.bundle.js").url();
 const shoreStationManifest = await FileAttachment("data/shore_station_anomaly/manifest.json").json();
 const shoreStationRows = await sql`SELECT * FROM shore_station_climatology`;
 const shoreStationRowsByKey = Object.groupBy(shoreStationRows, (row) => row.station_key);
