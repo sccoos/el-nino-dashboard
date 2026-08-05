@@ -8,5 +8,5 @@ export default {
   footer: false,
   pager: false,
   toc: false,
-  globalStylesheets: ["./vendor/maplibre-gl.css", "./styles/global.css"]
+  globalStylesheets: ["./styles/maplibre-gl.css", "./styles/global.css"]
 };
