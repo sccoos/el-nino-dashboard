@@ -64,6 +64,8 @@ export function MHWMap({
   zoom = DEFAULT_ZOOM,
   styleUrl = DEFAULT_STYLE,
   workerUrl = null,
+  apiRef = null,
+  onStationSelect = null,
   height = null,
   stations = [],
   interactive = true,
@@ -81,6 +83,11 @@ export function MHWMap({
       Number.isFinite(Number(station.longitude)) &&
       Number.isFinite(Number(station.latitude))
     );
+    const stationsByKey = new Map(
+      validStations
+        .filter((station) => station.station_key)
+        .map((station) => [station.station_key, station])
+    );
     const stationMarkers = [];
     let stationBoundsApplied = false;
 
@@ -93,11 +100,30 @@ export function MHWMap({
       style: styleUrl,
       center,
       zoom,
-      attributionControl: true,
+      attributionControl: false,
       interactive
     });
 
     mapRef.current = map;
+
+    const flyToStation = (stationKey) => {
+      const station = stationsByKey.get(stationKey);
+      if (!station) return false;
+
+      map.flyTo({
+        center: [Number(station.longitude), Number(station.latitude)],
+        zoom: Math.max(map.getZoom(), 5.5),
+        essential: true
+      });
+
+      return true;
+    };
+
+    if (apiRef) {
+      apiRef.current = {
+        flyToStation
+      };
+    }
 
     const addStationMarkers = () => {
       if (stationMarkers.length) return;
@@ -113,6 +139,12 @@ export function MHWMap({
           .setLngLat([longitude, latitude])
           .setPopup(popup)
           .addTo(map);
+
+        if (station.station_key) {
+          marker.getElement().addEventListener("click", () => {
+            onStationSelect?.(station.station_key);
+          });
+        }
 
         stationMarkers.push(marker);
         bounds.extend([longitude, latitude]);
@@ -144,6 +176,11 @@ export function MHWMap({
       map.addControl(new maplibregl.NavigationControl(), "top-right");
     }
 
+    map.addControl(
+      new maplibregl.AttributionControl({compact: true}),
+      "bottom-right"
+    );
+
     map.on("style.load", () => {
       addStationMarkers();
     });
@@ -157,10 +194,11 @@ export function MHWMap({
       resizeObserver.disconnect();
       if (animationFrame != null) cancelAnimationFrame(animationFrame);
       for (const marker of stationMarkers) marker.remove();
+      if (apiRef) apiRef.current = null;
       map.remove();
       mapRef.current = null;
     };
-  }, [center, interactive, showNavigation, stations, styleUrl, workerUrl, zoom]);
+  }, [apiRef, center, interactive, onStationSelect, showNavigation, stations, styleUrl, workerUrl, zoom]);
 
   return createElement(
     "article",
@@ -182,8 +220,10 @@ export function MHWMap({
 export function renderMHWMap(options = {}) {
   const container = document.createElement("div");
   container.style.height = "100%";
+  const apiRef = {current: null};
   const root = createRoot(container);
-  root.render(createElement(MHWMap, options));
+  root.render(createElement(MHWMap, {...options, apiRef}));
+  container.flyToStation = (stationKey) => apiRef.current?.flyToStation?.(stationKey) ?? false;
   return container;
 }
 

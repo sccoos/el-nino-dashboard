@@ -40,6 +40,8 @@ export function WaterTemperatureClimatology({
   stationOptions = null,
   selectedStationKey = null,
   onStationChange = null,
+  hoveredDay = null,
+  onHoveredDayChange = null,
   stationType = null,
   historicalStartYear = null,
   historicalEndYear = null,
@@ -49,8 +51,16 @@ export function WaterTemperatureClimatology({
   margin = DEFAULT_MARGIN
 }) {
   const plotId = useId();
-  const [hoveredDay, setHoveredDay] = useState(null);
+  const [internalHoveredDay, setInternalHoveredDay] = useState(null);
+  const activeHoveredDay = hoveredDay ?? internalHoveredDay;
   const normalizedRows = normalizeRows(rows);
+
+  const handleHoveredDayChange = (nextHoveredDay) => {
+    if (hoveredDay == null) {
+      setInternalHoveredDay(nextHoveredDay);
+    }
+    onHoveredDayChange?.(nextHoveredDay);
+  };
 
   if (!normalizedRows.length) {
     return createElement(
@@ -136,9 +146,9 @@ export function WaterTemperatureClimatology({
     {day: 244, label: "Sep"},
     {day: 305, label: "Nov"}
   ];
-  const hoveredRow = hoveredDay == null
+  const hoveredRow = activeHoveredDay == null
     ? null
-    : normalizedRows.find((row) => row.day_of_year === hoveredDay) ?? null;
+    : normalizedRows.find((row) => row.day_of_year === activeHoveredDay) ?? null;
   const tooltipX = hoveredRow ? xScale(hoveredRow.day_of_year) : null;
   const tooltipY = hoveredRow
     ? yScale(firstFiniteValue([
@@ -220,19 +230,19 @@ export function WaterTemperatureClimatology({
         style: svgStyle,
         role: "img",
         "aria-labelledby": `${plotId}-title ${plotId}-desc`,
-        onMouseLeave: () => setHoveredDay(null),
+        onMouseLeave: () => handleHoveredDayChange(null),
         onMouseMove: (event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
           const svgX = ((event.clientX - bounds.left) / bounds.width) * width;
           const plotX = svgX - margin.left;
 
           if (plotX < 0 || plotX > innerWidth) {
-            setHoveredDay(null);
+            handleHoveredDayChange(null);
             return;
           }
 
           const day = clampDay(Math.round(xScale.invert(plotX)));
-          setHoveredDay(day);
+          handleHoveredDayChange(day);
         }
       },
       createElement("title", {id: `${plotId}-title`}, `${stationName} climatology plot`),
@@ -611,6 +621,10 @@ function SelectableWaterTemperatureClimatology({
   stationRowsByKey,
   stationOptions,
   initialStationKey,
+  onStationChange,
+  hoveredDay,
+  onHoveredDayChange,
+  apiRef,
   width,
   height,
   margin
@@ -619,13 +633,25 @@ function SelectableWaterTemperatureClimatology({
   const [selectedStationKey, setSelectedStationKey] = useState(initialStationKey ?? fallbackKey);
   const selectedStation = stationOptions.find((station) => station.key === selectedStationKey) ?? stationOptions[0];
   const rows = selectedStation ? stationRowsByKey[selectedStation.key] ?? [] : [];
+  const handleStationChange = (nextStationKey) => {
+    setSelectedStationKey(nextStationKey);
+    onStationChange?.(nextStationKey);
+  };
+
+  if (apiRef) {
+    apiRef.current = {
+      setStationKey: handleStationChange
+    };
+  }
 
   return createElement(WaterTemperatureClimatology, {
     rows,
     stationName: selectedStation?.name ?? "Station",
     stationOptions,
     selectedStationKey: selectedStation?.key ?? null,
-    onStationChange: setSelectedStationKey,
+    onStationChange: handleStationChange,
+    hoveredDay,
+    onHoveredDayChange,
     stationType: selectedStation?.type ?? null,
     historicalStartYear: selectedStation?.historical_climatology_start_year ?? null,
     historicalEndYear: selectedStation?.historical_climatology_end_year ?? null,
@@ -640,22 +666,31 @@ export function renderSelectableWaterTemperatureClimatology({
   stationRowsByKey,
   stationOptions,
   initialStationKey = null,
+  onStationChange = null,
+  hoveredDay = null,
+  onHoveredDayChange = null,
   width,
   height,
   margin
 }) {
   const container = document.createElement("div");
+  const apiRef = {current: null};
   const root = createRoot(container);
   root.render(
-    createElement(SelectableWaterTemperatureClimatology, {
-      stationRowsByKey,
-      stationOptions,
-      initialStationKey,
-      width,
-      height,
-      margin
-    })
+      createElement(SelectableWaterTemperatureClimatology, {
+        stationRowsByKey,
+        stationOptions,
+        initialStationKey,
+        onStationChange,
+        hoveredDay,
+        onHoveredDayChange,
+        apiRef,
+        width,
+        height,
+        margin
+      })
   );
+  container.setStationKey = (stationKey) => apiRef.current?.setStationKey?.(stationKey);
   return container;
 }
 

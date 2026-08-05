@@ -28,12 +28,18 @@ const stationMap = renderMHWMap({
   title: "Observations Map",
   stations: shoreStationManifest.stations,
   workerUrl: maplibreWorkerUrl,
+  onStationSelect: (stationKey) => {
+    shoreStationClimatologyPlot.setStationKey?.(stationKey);
+  },
   height: 440
 });
 const shoreStationClimatologyPlot = renderSelectableWaterTemperatureClimatology({
   stationRowsByKey: shoreStationRowsByKey,
   stationOptions: shoreStationOptions,
-  initialStationKey: "humboldt"
+  initialStationKey: "humboldt",
+  onStationChange: (stationKey) => {
+    stationMap.flyToStation?.(stationKey);
+  }
 });
 
 const page = document.createElement("div");
