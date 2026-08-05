@@ -4,6 +4,7 @@ import * as maplibregl from "npm:maplibre-gl";
 
 const DEFAULT_CENTER = [-122.4194, 37.7749];
 const DEFAULT_ZOOM = 1;
+const CALIFORNIA_COUNTIES_GEOJSON_URL = "https://services.gis.ca.gov/arcgis/rest/services/Boundaries/CA_Counties/FeatureServer/0/query?where=1%3D1&outFields=County&f=geojson";
 const DEFAULT_STYLE = {
   version: 8,
   sources: {
@@ -13,6 +14,11 @@ const DEFAULT_STYLE = {
       minzoom: 0,
       maxzoom: 6,
       attribution: "© CARTO, © OpenStreetMap contributors"
+    },
+    californiaCounties: {
+      type: "geojson",
+      data: CALIFORNIA_COUNTIES_GEOJSON_URL,
+      attribution: "California county boundaries: CA Department of Finance"
     }
   },
   layers: [
@@ -53,6 +59,25 @@ const DEFAULT_STYLE = {
         "line-color": "#8db5cc",
         "line-width": 0.7,
         "line-dasharray": [2, 2]
+      }
+    },
+    {
+      id: "california-counties-fill",
+      type: "fill",
+      source: "californiaCounties",
+      paint: {
+        "fill-color": "#ffffff",
+        "fill-opacity": 0.04
+      }
+    },
+    {
+      id: "california-counties-outline",
+      type: "line",
+      source: "californiaCounties",
+      paint: {
+        "line-color": "#5b7083",
+        "line-width": 1.1,
+        "line-opacity": 0.7
       }
     }
   ]
