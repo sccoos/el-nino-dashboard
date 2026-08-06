@@ -18,7 +18,7 @@ export function ENSOAlertCard({status}) {
       "p",
       {
         className: "enso-alert-card__status",
-        style: {"--enso-status-color": statusColor}
+        style: {color: statusColor}
       },
       createElement(
         "a",
@@ -26,7 +26,8 @@ export function ENSOAlertCard({status}) {
           className: "enso-alert-card__link",
           href: "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
           target: "_blank",
-          rel: "noreferrer"
+          rel: "noreferrer",
+          style: {color: statusColor}
         },
         status || "Status unavailable"
       )
@@ -35,13 +36,22 @@ export function ENSOAlertCard({status}) {
 }
 
 function getStatusColor(status) {
-  const normalizedStatus = String(status ?? "").trim().toLowerCase();
+  const normalizedStatus = normalizeStatus(status);
 
-  if (normalizedStatus === "el niño advisory") return "#b42318";
-  if (normalizedStatus === "el niño watch") return "#f79009";
-  if (normalizedStatus === "la niña advisory") return "#175cd3";
-  if (normalizedStatus === "la niña watch") return "#56b4ef";
+  if (normalizedStatus.includes("el nino") && normalizedStatus.includes("advisory")) return "#b42318";
+  if (normalizedStatus.includes("el nino") && normalizedStatus.includes("watch")) return "#f79009";
+  if (normalizedStatus.includes("la nina") && normalizedStatus.includes("advisory")) return "#175cd3";
+  if (normalizedStatus.includes("la nina") && normalizedStatus.includes("watch")) return "#56b4ef";
   return "#102a43";
+}
+
+function normalizeStatus(status) {
+  return String(status ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 export function renderENSOAlertCard(data) {

@@ -31,7 +31,6 @@
   margin: 0;
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--enso-status-color, #102a43);
 }
 
 .enso-alert-card__link {
