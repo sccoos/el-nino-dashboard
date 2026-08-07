@@ -14,11 +14,11 @@ const DEFAULT_STYLE = {
       minzoom: 0,
       maxzoom: 6,
       attribution: "© CARTO, © OpenStreetMap contributors"
-    },
-    californiaCounties: {
-      type: "geojson",
-      data: CALIFORNIA_COUNTIES_GEOJSON_URL
     }
+    // californiaCounties: {
+    //   type: "geojson",
+    //   data: CALIFORNIA_COUNTIES_GEOJSON_URL
+    // }
   },
   layers: [
     {
@@ -60,25 +60,25 @@ const DEFAULT_STYLE = {
         "line-dasharray": [2, 2]
       }
     },
-    {
-      id: "california-counties-fill",
-      type: "fill",
-      source: "californiaCounties",
-      paint: {
-        "fill-color": "#ffffff",
-        "fill-opacity": 0.04
-      }
-    },
-    {
-      id: "california-counties-outline",
-      type: "line",
-      source: "californiaCounties",
-      paint: {
-        "line-color": "#5b7083",
-        "line-width": 1.1,
-        "line-opacity": 0.7
-      }
-    }
+    // {
+    //   id: "california-counties-fill",
+    //   type: "fill",
+    //   source: "californiaCounties",
+    //   paint: {
+    //     "fill-color": "#ffffff",
+    //     "fill-opacity": 0.04
+    //   }
+    // },
+    // {
+    //   id: "california-counties-outline",
+    //   type: "line",
+    //   source: "californiaCounties",
+    //   paint: {
+    //     "line-color": "#5b7083",
+    //     "line-width": 1.1,
+    //     "line-opacity": 0.7
+    //   }
+    // }
   ]
 };
 
@@ -112,7 +112,10 @@ export function MHWMap({
         .filter((station) => station.station_key)
         .map((station) => [station.station_key, station])
     );
+    const stationMarkersByKey = new Map();
+    const stationPopupsByKey = new Map();
     const stationMarkers = [];
+    let activePopupStationKey = null;
     let stationBoundsApplied = false;
 
     if (workerUrl) {
@@ -130,16 +133,43 @@ export function MHWMap({
 
     mapRef.current = map;
 
+    const closeOpenPopups = () => {
+      for (const popup of stationPopupsByKey.values()) {
+        popup.remove();
+      }
+      activePopupStationKey = null;
+    };
+
+    const openStationPopup = (stationKey) => {
+      const station = stationsByKey.get(stationKey);
+      const marker = stationMarkersByKey.get(stationKey);
+      const popup = stationPopupsByKey.get(stationKey);
+      if (!station || !marker || !popup) return false;
+
+      closeOpenPopups();
+      popup
+        .setLngLat([Number(station.longitude), Number(station.latitude)])
+        .addTo(map);
+      activePopupStationKey = stationKey;
+      return true;
+    };
+
     const flyToStation = (stationKey) => {
       const station = stationsByKey.get(stationKey);
       if (!station) return false;
 
+      const targetCenter = [Number(station.longitude), Number(station.latitude)];
       map.flyTo({
-        center: [Number(station.longitude), Number(station.latitude)],
-        zoom: Math.max(map.getZoom(), 5.5),
+        center: targetCenter,
+        zoom: Math.max(map.getZoom(), 6.5),
         essential: true
       });
 
+      const openAfterMove = () => {
+        openStationPopup(stationKey);
+      };
+
+      map.once("moveend", openAfterMove);
       return true;
     };
 
@@ -157,15 +187,25 @@ export function MHWMap({
       for (const station of validStations) {
         const longitude = Number(station.longitude);
         const latitude = Number(station.latitude);
-        const popup = new maplibregl.Popup({offset: 18}).setText(station.name ?? "Station");
+        const popup = new maplibregl.Popup({
+          offset: 18,
+          closeOnClick: false
+        }).setText(station.name ?? "Station");
 
         const marker = new maplibregl.Marker({color: "#0f766e"})
           .setLngLat([longitude, latitude])
-          .setPopup(popup)
           .addTo(map);
 
         if (station.station_key) {
-          marker.getElement().addEventListener("click", () => {
+          stationMarkersByKey.set(station.station_key, marker);
+          stationPopupsByKey.set(station.station_key, popup);
+          marker.getElement().addEventListener("click", (event) => {
+            event.stopPropagation();
+            if (activePopupStationKey === station.station_key) {
+              closeOpenPopups();
+            } else {
+              openStationPopup(station.station_key);
+            }
             onStationSelect?.(station.station_key);
           });
         }
