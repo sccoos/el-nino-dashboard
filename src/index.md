@@ -27,6 +27,13 @@ const shoreStationOptions = shoreStationManifest.stations
     current_year_days_exceeding_historical_p90: station.current_year_days_exceeding_historical_p90
   }))
   .filter((station) => shoreStationRowsByKey[station.key]?.length);
+const requestedSiteName = (new URLSearchParams(location.search).get("site") ?? "")
+  .trim()
+  .replace(/^["']|["']$/g, "")
+  .toLocaleLowerCase();
+const initialStationKey = shoreStationOptions.find(
+  (station) => station.name.toLocaleLowerCase() === requestedSiteName
+)?.key ?? "humboldt";
 const stationMap = renderMHWMap({
   title: "Observations Map",
   stations: shoreStationManifest.stations,
@@ -39,7 +46,7 @@ const stationMap = renderMHWMap({
 const shoreStationClimatologyPlot = renderSelectableWaterTemperatureClimatology({
   stationRowsByKey: shoreStationRowsByKey,
   stationOptions: shoreStationOptions,
-  initialStationKey: "humboldt",
+  initialStationKey,
   onStationChange: (stationKey) => {
     stationMap.flyToStation?.(stationKey);
   }
