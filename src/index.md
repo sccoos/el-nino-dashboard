@@ -49,6 +49,12 @@ const shoreStationClimatologyPlot = renderSelectableWaterTemperatureClimatology(
   initialStationKey,
   onStationChange: (stationKey) => {
     stationMap.flyToStation?.(stationKey);
+    const station = shoreStationOptions.find((option) => option.key === stationKey);
+    if (station) {
+      const url = new URL(location.href);
+      url.searchParams.set("site", station.name);
+      history.replaceState({}, "", url);
+    }
   }
 });
 
