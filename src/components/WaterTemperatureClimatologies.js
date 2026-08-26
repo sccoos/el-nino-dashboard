@@ -14,9 +14,10 @@ function normalizeRows(rows) {
       year: toNumber(row.year),
       day_of_year: Number(row.day_of_year),
       current_year_daily_mean: toNumber(row.current_year_daily_mean),
-      climatology_min: toNumber(row.climatology_min),
-      climatology_max: toNumber(row.climatology_max),
+      climatology_min: toNumber(row.historical_climatology_min),
+      climatology_max: toNumber(row.historical_climatology_max),
       historical_climatology_mean: toNumber(row.historical_climatology_mean),
+      historical_climatology_p90: toNumber(row.historical_climatology_p90),
       year_to_date_anomaly: toNumber(row.year_to_date_anomaly)
     }))
     .filter((row) => Number.isFinite(row.day_of_year))
@@ -45,6 +46,8 @@ export function WaterTemperatureClimatology({
   stationType = null,
   historicalStartYear = null,
   historicalEndYear = null,
+  currentYearDaysExceedingHistoricalMax = null,
+  currentYearDaysExceedingHistoricalP90 = null,
   sourceUrl = null,
   width = DEFAULT_WIDTH,
   height = DEFAULT_HEIGHT,
@@ -77,7 +80,8 @@ export function WaterTemperatureClimatology({
     row.current_year_daily_mean,
     row.climatology_min,
     row.climatology_max,
-    row.historical_climatology_mean
+    row.historical_climatology_mean,
+    row.historical_climatology_p90
   ]).filter(Number.isFinite);
 
   const xScale = d3.scaleLinear()
@@ -106,6 +110,10 @@ export function WaterTemperatureClimatology({
   const historicalMeanSeries = normalizedRows.map((row) => ({
     day_of_year: row.day_of_year,
     value: row.historical_climatology_mean
+  }));
+  const historicalP90Series = normalizedRows.map((row) => ({
+    day_of_year: row.day_of_year,
+    value: row.historical_climatology_p90
   }));
   const climatologyMinSeries = normalizedRows.map((row) => ({
     day_of_year: row.day_of_year,
@@ -218,6 +226,7 @@ export function WaterTemperatureClimatology({
       createElement("div", {className: "climatology-card__header-right"},
         createElement("div", {className: "climatology-card__legend"},
           legendItem("#111111", "Historical mean", "dashed"),
+          legendItem("#2f855a", "Historical 90th percentile", "dashed"),
           legendItem("#111111", "Current year"),
           legendItem("#8a94a6", "Climatology range")
         )
@@ -249,7 +258,7 @@ export function WaterTemperatureClimatology({
       createElement(
         "desc",
         {id: `${plotId}-desc`},
-        "Line chart of historical climatology mean, climatology minimum and maximum range, and the current year daily mean."
+        "Line chart of historical climatology mean and 90th percentile, climatology minimum and maximum range, and the current year daily mean."
       ),
       createElement("g", {transform: `translate(${margin.left},${margin.top})`},
         createElement(
@@ -353,6 +362,13 @@ export function WaterTemperatureClimatology({
           stroke: "#111111",
           strokeWidth: 1.8
         }),
+        createElement("path", {
+          d: lineOrNull(line, historicalP90Series),
+          fill: "none",
+          stroke: "#2f855a",
+          strokeWidth: 1.8,
+          strokeDasharray: "6 4"
+        }),
         createElement("line", {
           x1: 0,
           x2: innerWidth,
@@ -447,12 +463,33 @@ export function WaterTemperatureClimatology({
           fontSize: 12,
           fontWeight: 600
         }, "Water Temperature (°C)"),
-        createElement("text", {
-          x: 8,
-          y: innerHeight - 20,
-          fill: "#486581",
-          fontSize: "0.5rem"
-        }, `Historic climatology calculated from: ${formatYearRange(historicalStartYear, historicalEndYear)}`),
+        createElement(
+          "foreignObject",
+          {
+            x: 8,
+            y: innerHeight - 36,
+            width: innerWidth - 16,
+            height: 28
+          },
+          createElement(
+            "div",
+            {
+              xmlns: "http://www.w3.org/1999/xhtml",
+              className: "climatology-card__summary"
+            },
+            `Historic climatology for ${stationName} calculated from ${formatYearRange(historicalStartYear, historicalEndYear)} with 7-day smoothing. This year to date, ${stationName} has observed ${formatDayCount(currentYearDaysExceedingHistoricalMax)} new maximum daily mean temperatures, and ${formatDayCount(currentYearDaysExceedingHistoricalP90)} days where daily mean temperature exceeded the threshold for marine heatwave (`,
+            createElement(
+              "a",
+              {
+                href: "https://doi.org/10.1016/j.pocean.2015.12.014",
+                target: "_blank",
+                rel: "noreferrer"
+              },
+              "Hobday et al. 2016"
+            ),
+            ")."
+          )
+        ),
         createElement(
           "text",
           {
@@ -537,6 +574,10 @@ function formatYearRange(startYear, endYear) {
   return Number.isFinite(startYear) && Number.isFinite(endYear)
     ? `${startYear} - ${endYear}`
     : "Unavailable";
+}
+
+function formatDayCount(value) {
+  return Number.isFinite(Number(value)) ? String(value) : "N/A";
 }
 
 function tooltipTransform(x, y, innerWidth) {
@@ -662,6 +703,10 @@ function SelectableWaterTemperatureClimatology({
     stationType: selectedStation?.type ?? null,
     historicalStartYear: selectedStation?.historical_climatology_start_year ?? null,
     historicalEndYear: selectedStation?.historical_climatology_end_year ?? null,
+    currentYearDaysExceedingHistoricalMax:
+      selectedStation?.current_year_days_exceeding_historical_max ?? null,
+    currentYearDaysExceedingHistoricalP90:
+      selectedStation?.current_year_days_exceeding_historical_p90 ?? null,
     sourceUrl: selectedStation?.source_url ?? null,
     width,
     height,

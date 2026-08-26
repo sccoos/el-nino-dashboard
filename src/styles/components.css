@@ -176,6 +176,17 @@
   cursor: crosshair;
 }
 
+.climatology-card__summary {
+  margin: 0;
+  color: #486581;
+  font-size: 0.5rem;
+  line-height: 1.35;
+}
+
+.climatology-card__summary a {
+  color: #0f766e;
+}
+
 .climatology-card__empty {
   margin: 0;
   color: #5b7083;

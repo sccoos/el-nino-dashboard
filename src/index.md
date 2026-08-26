@@ -22,7 +22,9 @@ const shoreStationOptions = shoreStationManifest.stations
     latitude: station.latitude,
     source_url: station.source_url,
     historical_climatology_start_year: station.historical_climatology_start_year,
-    historical_climatology_end_year: station.historical_climatology_end_year
+    historical_climatology_end_year: station.historical_climatology_end_year,
+    current_year_days_exceeding_historical_max: station.current_year_days_exceeding_historical_max,
+    current_year_days_exceeding_historical_p90: station.current_year_days_exceeding_historical_p90
   }))
   .filter((station) => shoreStationRowsByKey[station.key]?.length);
 const stationMap = renderMHWMap({

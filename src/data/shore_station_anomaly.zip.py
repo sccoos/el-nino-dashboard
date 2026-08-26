@@ -346,6 +346,7 @@ def climatology_day_of_year(series: pd.Series) -> pd.Series:
     adjusted = day_of_year.where(~leap_day)
 
     # Shift leap-year dates after Feb. 29 back by one day.
+    # TODO fix this logic, 
     after_feb_29 = (series.dt.is_leap_year) & ((month > 2) | ((month == 2) & (day > 29)))
     adjusted = adjusted.where(~after_feb_29, adjusted - 1)
     return adjusted
@@ -385,13 +386,22 @@ def build_daily_products(
         )
     )
 
-    historical_daily = daily[daily["year"] < current_year]
+    historical_daily = (
+        daily[daily["year"] < current_year].sort_values("time").copy()
+    )
+    historical_daily["historical_rolling_daily_mean"] = (
+        historical_daily["daily_mean"].rolling(window=10, center=True).mean()
+    )
     historical_climatology = (
         historical_daily.groupby("day_of_year", as_index=False)
         .agg(
-            historical_climatology_mean=("daily_mean", "mean"),
-            historical_climatology_min=("daily_mean", "min"),
-            historical_climatology_max=("daily_mean", "max"),
+            historical_climatology_mean=("historical_rolling_daily_mean", "mean"),
+            historical_climatology_min=("historical_rolling_daily_mean", "min"),
+            historical_climatology_max=("historical_rolling_daily_mean", "max"),
+            historical_climatology_p90=(
+                "historical_rolling_daily_mean",
+                lambda values: values.quantile(0.9),
+            ),
         )
     )
 
@@ -425,7 +435,10 @@ def build_daily_products(
                 "current_year_daily_mean",
                 "climatology_min",
                 "climatology_max",
+                "historical_climatology_min",
+                "historical_climatology_max",
                 "historical_climatology_mean",
+                "historical_climatology_p90",
                 "year_to_date_anomaly",
             ]
         ],
@@ -484,6 +497,16 @@ def build_archive() -> bytes:
                 temperature_qc_variable=temperature_qc_variable,
             )
             station_frames.append(station_daily)
+            current_year_days_exceeding_historical_max = int(
+                station_daily["current_year_daily_mean"]
+                .ge(station_daily["climatology_max"])
+                .sum()
+            )
+            current_year_days_exceeding_historical_p90 = int(
+                station_daily["current_year_daily_mean"]
+                .gt(station_daily["historical_climatology_p90"])
+                .sum()
+            )
 
             manifest["stations"].append(
                 {
@@ -505,6 +528,8 @@ def build_archive() -> bytes:
                     "historical_climatology_end_year": climatology_metadata[
                         "historical_climatology_end_year"
                     ],
+                    "current_year_days_exceeding_historical_max": current_year_days_exceeding_historical_max,
+                    "current_year_days_exceeding_historical_p90": current_year_days_exceeding_historical_p90,
                     "source_url": f"{dataset['server']}/tabledap/{dataset['dataset_id']}.html",
                 }
             )
