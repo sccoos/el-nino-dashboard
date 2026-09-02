@@ -158,6 +158,8 @@ export function MHWMap({
       const station = stationsByKey.get(stationKey);
       if (!station) return false;
 
+      // Hide the prior station label while the map moves to the new selection.
+      closeOpenPopups();
       const targetCenter = [Number(station.longitude), Number(station.latitude)];
       map.flyTo({
         center: targetCenter,
@@ -188,7 +190,9 @@ export function MHWMap({
         const longitude = Number(station.longitude);
         const latitude = Number(station.latitude);
         const popup = new maplibregl.Popup({
+          anchor: "top",
           offset: 18,
+          closeButton: false,
           closeOnClick: false
         }).setText(station.name ?? "Station");
 

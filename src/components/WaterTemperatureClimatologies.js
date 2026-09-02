@@ -215,7 +215,7 @@ export function WaterTemperatureClimatology({
         viewBox: `0 0 ${width} ${height}`,
         className: "climatology-card__svg",
         role: "img",
-        "aria-labelledby": `${plotId}-title ${plotId}-desc`,
+        "aria-describedby": `${plotId}-desc`,
         onMouseLeave: () => handleHoveredDayChange(null),
         onMouseMove: (event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
@@ -231,7 +231,6 @@ export function WaterTemperatureClimatology({
           handleHoveredDayChange(day);
         }
       },
-      createElement("title", {id: `${plotId}-title`}, `${stationName} climatology plot`),
       createElement(
         "desc",
         {id: `${plotId}-desc`},
@@ -360,61 +359,6 @@ export function WaterTemperatureClimatology({
           y2: innerHeight,
           stroke: "#7b8ea3"
         }),
-        hoveredRow ? createElement(
-          "g",
-          null,
-          createElement("line", {
-            x1: tooltipX,
-            x2: tooltipX,
-            y1: 0,
-            y2: innerHeight,
-            stroke: "#102a43",
-            strokeDasharray: "4 4",
-            opacity: 0.45
-          }),
-          tooltipDot(tooltipX, yScale(hoveredRow.climatology_min), "#b6c0cc"),
-          tooltipDot(tooltipX, yScale(hoveredRow.climatology_max), "#b6c0cc"),
-          tooltipDot(tooltipX, yScale(hoveredRow.historical_climatology_mean), "#111111"),
-          Number.isFinite(hoveredRow.current_year_daily_mean)
-            ? tooltipDot(tooltipX, yScale(hoveredRow.current_year_daily_mean), "#111111")
-            : null,
-          createElement(
-            "g",
-            {
-              transform: tooltipTransform(tooltipX, tooltipY, innerWidth)
-            },
-            createElement("rect", {
-              width: 188,
-              height: 116,
-              rx: 12,
-              fill: "#102a43",
-              opacity: 0.95
-            }),
-            createElement("text", {
-              x: 12,
-              y: 22,
-              fill: "#f8fbff",
-              fontSize: 12,
-              fontWeight: 700
-            }, formatTooltipDate(hoveredRow)),
-            tooltipText(
-              12,
-              40,
-              "#ffffff",
-              `${formatFocusYear(hoveredRow)}: ${formatTemperature(hoveredRow.current_year_daily_mean)}`
-            ),
-            createElement("text", {
-              x: 12,
-              y: 60,
-              fill: "#cbd5e1",
-              fontSize: 11,
-              fontWeight: 700
-            }, "Historical"),
-            tooltipText(12, 76, "#ffffff", `Mean: ${formatTemperature(hoveredRow.historical_climatology_mean)}`),
-            tooltipText(12, 92, "#d1d5db", `Max: ${formatTemperature(hoveredRow.climatology_max)}`),
-            tooltipText(12, 108, "#d1d5db", `Min: ${formatTemperature(hoveredRow.climatology_min)}`)
-          )
-        ) : null,
         monthLabels.map(({day, label}) =>
           createElement("text", {
             key: label,
@@ -488,7 +432,60 @@ export function WaterTemperatureClimatology({
               legendItem("#8a94a6", "Climatology range")
             )
           )
-        )
+        ),
+        hoveredRow ? createElement(
+          "g",
+          null,
+          createElement("line", {
+            x1: tooltipX,
+            x2: tooltipX,
+            y1: 0,
+            y2: innerHeight,
+            stroke: "#102a43",
+            strokeDasharray: "4 4",
+            opacity: 0.45
+          }),
+          tooltipDot(tooltipX, yScale(hoveredRow.climatology_min), "#b6c0cc"),
+          tooltipDot(tooltipX, yScale(hoveredRow.climatology_max), "#b6c0cc"),
+          tooltipDot(tooltipX, yScale(hoveredRow.historical_climatology_mean), "#111111"),
+          Number.isFinite(hoveredRow.current_year_daily_mean)
+            ? tooltipDot(tooltipX, yScale(hoveredRow.current_year_daily_mean), "#111111")
+            : null,
+          createElement(
+            "g",
+            {transform: tooltipTransform(tooltipX, tooltipY, innerWidth)},
+            createElement("rect", {
+              width: 188,
+              height: 116,
+              rx: 12,
+              fill: "#102a43",
+              opacity: 0.95
+            }),
+            createElement("text", {
+              x: 12,
+              y: 22,
+              fill: "#f8fbff",
+              fontSize: 12,
+              fontWeight: 700
+            }, formatTooltipDate(hoveredRow)),
+            tooltipText(
+              12,
+              40,
+              "#ffffff",
+              `${formatFocusYear(hoveredRow)}: ${formatTemperature(hoveredRow.current_year_daily_mean)}`
+            ),
+            createElement("text", {
+              x: 12,
+              y: 60,
+              fill: "#cbd5e1",
+              fontSize: 11,
+              fontWeight: 700
+            }, "Historical"),
+            tooltipText(12, 76, "#ffffff", `Mean: ${formatTemperature(hoveredRow.historical_climatology_mean)}`),
+            tooltipText(12, 92, "#d1d5db", `Max: ${formatTemperature(hoveredRow.climatology_max)}`),
+            tooltipText(12, 108, "#d1d5db", `Min: ${formatTemperature(hoveredRow.climatology_min)}`)
+          )
+        ) : null
       )
     ),
     createElement(
