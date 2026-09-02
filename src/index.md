@@ -40,8 +40,7 @@ const stationMap = renderMHWMap({
   workerUrl: maplibreWorkerUrl,
   onStationSelect: (stationKey) => {
     shoreStationClimatologyPlot.setStationKey?.(stationKey);
-  },
-  height: 440
+  }
 });
 const shoreStationClimatologyPlot = renderSelectableWaterTemperatureClimatology({
   stationRowsByKey: shoreStationRowsByKey,

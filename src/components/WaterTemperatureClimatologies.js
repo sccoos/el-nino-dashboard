@@ -4,7 +4,7 @@ import * as d3 from "npm:d3";
 
 const DEFAULT_WIDTH = 760;
 const DEFAULT_HEIGHT = 360;
-const DEFAULT_MARGIN = {top: 24, right: 24, bottom: 42, left: 56};
+const DEFAULT_MARGIN = {top: 24, right: 4, bottom: 42, left: 56};
 const ANOMALY_DOMAIN = [-4, 0, 4];
 
 function normalizeRows(rows) {
@@ -208,29 +208,6 @@ export function WaterTemperatureClimatology({
             )
           : createElement("h3", {className: "climatology-card__title"}, stationName)
       ),
-      createElement("div", {className: "climatology-card__header-right"},
-        createElement(
-          "div",
-          {className: "climatology-card__header-legends"},
-          createElement(
-            "div",
-            {className: "climatology-card__colorbar-wrap"},
-            createElement("span", {className: "climatology-card__colorbar-label"}, "Temperature anomaly (°C)"),
-            renderColorbar(plotId, anomalyColor),
-            createElement("div", {className: "climatology-card__colorbar-ticks"},
-              createElement("span", null, "-4"),
-              createElement("span", null, "0"),
-              createElement("span", null, "4")
-            )
-          ),
-          createElement("div", {className: "climatology-card__legend"},
-            legendItem("#111111", "Historical mean", "dashed"),
-            legendItem("#2f855a", "Historical 90th percentile", "dashed"),
-            legendItem("#111111", "Current year"),
-            legendItem("#8a94a6", "Climatology range")
-          )
-        )
-      )
     ),
     createElement(
       "svg",
@@ -467,51 +444,78 @@ export function WaterTemperatureClimatology({
           "foreignObject",
           {
             x: 8,
-            y: innerHeight - 36,
-            width: innerWidth - 16,
-            height: 28
+            y: 8,
+            width: Math.min(innerWidth - 16, 190),
+            height: 56
           },
           createElement(
             "div",
             {
               xmlns: "http://www.w3.org/1999/xhtml",
-              className: "climatology-card__summary"
+              className: "climatology-card__colorbar-overlay"
             },
-            `Historic climatology for ${stationName} calculated from ${formatYearRange(historicalStartYear, historicalEndYear)} with 7-day smoothing. This year to date, ${stationName} has observed ${formatDayCount(currentYearDaysExceedingHistoricalMax)} new maximum daily mean temperatures, and ${formatDayCount(currentYearDaysExceedingHistoricalP90)} days where daily mean temperature exceeded the threshold for marine heatwave (`,
             createElement(
-              "a",
-              {
-                href: "https://doi.org/10.1016/j.pocean.2015.12.014",
-                target: "_blank",
-                rel: "noreferrer"
-              },
-              "Hobday et al. 2016"
-            ),
-            ")."
+              "div",
+              {className: "climatology-card__colorbar-wrap"},
+              createElement("span", {className: "climatology-card__colorbar-label"}, "Temperature anomaly (°C)"),
+              renderColorbar(plotId, anomalyColor),
+              createElement("div", {className: "climatology-card__colorbar-ticks"},
+                createElement("span", null, "-4"),
+                createElement("span", null, "0"),
+                createElement("span", null, "4")
+              )
+            )
           )
         ),
         createElement(
-          "text",
+          "foreignObject",
           {
             x: 8,
-            y: innerHeight - 8,
-            fill: "#486581",
-            fontSize: "0.5rem"
+            y: innerHeight - 26,
+            width: innerWidth - 16,
+            height: 20
           },
-          "Source: ",
-          sourceUrl
-            ? createElement(
-                "a",
-                {
-                  href: sourceUrl,
-                  target: "_blank",
-                  rel: "noreferrer"
-                },
-                sourceUrl
-              )
-            : "Unavailable"
+          createElement(
+            "div",
+            {
+              xmlns: "http://www.w3.org/1999/xhtml",
+              className: "climatology-card__legend-overlay"
+            },
+            createElement("div", {className: "climatology-card__legend"},
+              legendItem("#111111", "Historical mean", "dashed"),
+              legendItem("#2f855a", "Historical 90th percentile", "dashed"),
+              legendItem("#111111", "Current year"),
+              legendItem("#8a94a6", "Climatology range")
+            )
+          )
         )
       )
+    ),
+    createElement(
+      "div",
+      {className: "climatology-card__notes"},
+      `Historic climatology for ${stationName} calculated from ${formatYearRange(historicalStartYear, historicalEndYear)} with 7-day smoothing. This year to date, ${stationName} has observed ${formatDayCount(currentYearDaysExceedingHistoricalMax)} new maximum daily mean temperatures, and ${formatDayCount(currentYearDaysExceedingHistoricalP90)} days where daily mean temperature exceeded the threshold for marine heatwave (`,
+      createElement(
+        "a",
+        {
+          href: "https://doi.org/10.1016/j.pocean.2015.12.014",
+          target: "_blank",
+          rel: "noreferrer"
+        },
+        "Hobday et al. 2016"
+      ),
+      "). Source: ",
+      sourceUrl
+        ? createElement(
+            "a",
+            {
+              href: sourceUrl,
+              target: "_blank",
+              rel: "noreferrer"
+            },
+            sourceUrl
+          )
+        : "Unavailable"
     )
   );
 }
