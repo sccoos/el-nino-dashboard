@@ -32,3 +32,26 @@
   grid-row: 2;
   min-width: 0;
 }
+
+@media (max-width: 900px) {
+  .dashboard-page {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .dashboard-card-pane {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .dashboard-plot-pane {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .dashboard-map-pane {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}

@@ -70,8 +70,8 @@
 
 .climatology-card__header {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(0.5rem, 1.5vw, 1rem);
   align-items: start;
   margin-bottom: 0.75rem;
   width: 100%;
@@ -82,17 +82,18 @@
   min-width: 0;
 }
 
-.climatology-card__header-center {
-  justify-self: center;
-  display: flex;
-  justify-content: center;
+.climatology-card__header-right {
+  justify-self: stretch;
+  width: 100%;
   min-width: 0;
 }
 
-.climatology-card__header-right {
-  justify-self: end;
+.climatology-card__header-legends {
   display: flex;
+  align-items: flex-start;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
   min-width: 0;
 }
 
@@ -103,12 +104,14 @@
 }
 
 .climatology-card__station-select-wrap {
-  display: inline-block;
+  display: block;
+  width: min(100%, 22rem);
   margin-top: 0.2rem;
 }
 
 .climatology-card__station-select {
-  font-size: 1.25rem;
+  width: 100%;
+  font-size: clamp(0.95rem, 2vw, 1.25rem);
   font-weight: 700;
   color: #102a43;
   border: 1px solid #d7e3f0;
@@ -117,41 +120,47 @@
   background: #ffffff;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
   font-family: "Avenir Next", "Segoe UI", sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .climatology-card__colorbar-wrap {
+  --colorbar-width: clamp(150px, 19vw, 220px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  margin-bottom: 0.75rem;
+  flex: 0 1 var(--colorbar-width);
+  margin: 0;
 }
 
 .climatology-card__colorbar-label {
-  font-size: 0.84rem;
+  font-size: clamp(0.7rem, 1.3vw, 0.84rem);
   color: #334e68;
   font-weight: 600;
 }
 
 .climatology-card__colorbar-svg {
-  width: 220px;
-  height: 14px;
+  width: var(--colorbar-width);
+  height: clamp(10px, 1.3vw, 14px);
   display: block;
 }
 
 .climatology-card__colorbar-ticks {
   display: flex;
   justify-content: space-between;
-  width: 220px;
-  font-size: 0.75rem;
+  width: var(--colorbar-width);
+  font-size: clamp(0.65rem, 1.2vw, 0.75rem);
   color: #5b7083;
 }
 
 .climatology-card__legend {
   display: flex;
-  gap: 0.85rem;
+  flex: 1 1 240px;
   flex-wrap: wrap;
-  font-size: 0.85rem;
+  gap: 0.35rem 0.85rem;
+  justify-content: end;
+  font-size: clamp(0.7rem, 1.35vw, 0.85rem);
   color: #334e68;
 }
 
@@ -159,6 +168,28 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .climatology-card__header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .climatology-card__header-left {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .climatology-card__header-right {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: stretch;
+  }
+
+  .climatology-card__header-legends {
+    justify-content: flex-start;
+  }
 }
 
 .climatology-card__legend-swatch {

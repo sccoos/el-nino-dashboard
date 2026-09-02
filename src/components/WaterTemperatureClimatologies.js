@@ -208,27 +208,27 @@ export function WaterTemperatureClimatology({
             )
           : createElement("h3", {className: "climatology-card__title"}, stationName)
       ),
-      createElement(
-        "div",
-        {className: "climatology-card__header-center"},
+      createElement("div", {className: "climatology-card__header-right"},
         createElement(
           "div",
-          {className: "climatology-card__colorbar-wrap"},
-          createElement("span", {className: "climatology-card__colorbar-label"}, "Temperature anomaly (°C)"),
-          renderColorbar(plotId, anomalyColor),
-          createElement("div", {className: "climatology-card__colorbar-ticks"},
-            createElement("span", null, "-4"),
-            createElement("span", null, "0"),
-            createElement("span", null, "4")
+          {className: "climatology-card__header-legends"},
+          createElement(
+            "div",
+            {className: "climatology-card__colorbar-wrap"},
+            createElement("span", {className: "climatology-card__colorbar-label"}, "Temperature anomaly (°C)"),
+            renderColorbar(plotId, anomalyColor),
+            createElement("div", {className: "climatology-card__colorbar-ticks"},
+              createElement("span", null, "-4"),
+              createElement("span", null, "0"),
+              createElement("span", null, "4")
+            )
+          ),
+          createElement("div", {className: "climatology-card__legend"},
+            legendItem("#111111", "Historical mean", "dashed"),
+            legendItem("#2f855a", "Historical 90th percentile", "dashed"),
+            legendItem("#111111", "Current year"),
+            legendItem("#8a94a6", "Climatology range")
           )
-        )
-      ),
-      createElement("div", {className: "climatology-card__header-right"},
-        createElement("div", {className: "climatology-card__legend"},
-          legendItem("#111111", "Historical mean", "dashed"),
-          legendItem("#2f855a", "Historical 90th percentile", "dashed"),
-          legendItem("#111111", "Current year"),
-          legendItem("#8a94a6", "Climatology range")
         )
       )
     ),

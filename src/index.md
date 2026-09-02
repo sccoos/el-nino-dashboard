@@ -4,12 +4,12 @@ sql:
 ---
 
 ```js
-import {renderENSOAlertCard} from "./components/ENSOAlertCard.js";
+//import {renderENSOAlertCard} from "./components/ENSOAlertCard.js";
 import {renderMHWMap} from "./components/MHW-Map.js";
 import {renderSelectableWaterTemperatureClimatology} from "./components/WaterTemperatureClimatologies.js";
 
 const ensoAlertStatus = await FileAttachment("data/ENSO_alert_status.json").json();
-const ensoAlertCard = renderENSOAlertCard(ensoAlertStatus);
+//const ensoAlertCard = renderENSOAlertCard(ensoAlertStatus);
 const maplibreWorkerUrl = await FileAttachment("data/maplibre-gl-worker.bundle.js").url();
 const shoreStationManifest = await FileAttachment("data/shore_station_anomaly/manifest.json").json();
 const shoreStationRows = await sql`SELECT * FROM shore_station_climatology`;
@@ -61,9 +61,9 @@ const shoreStationClimatologyPlot = renderSelectableWaterTemperatureClimatology(
 const page = document.createElement("div");
 page.className = "dashboard-page";
 
-const cardPane = document.createElement("div");
-cardPane.className = "dashboard-card-pane";
-cardPane.append(ensoAlertCard);
+// const cardPane = document.createElement("div");
+// cardPane.className = "dashboard-card-pane";
+// cardPane.append(ensoAlertCard);
 
 const mapPane = document.createElement("div");
 mapPane.className = "dashboard-map-pane";
@@ -73,6 +73,6 @@ const plotPane = document.createElement("div");
 plotPane.className = "dashboard-plot-pane";
 plotPane.append(shoreStationClimatologyPlot);
 
-page.append(cardPane, mapPane, plotPane);
+page.append(mapPane, plotPane);
 display(page);
 ```
