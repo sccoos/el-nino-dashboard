@@ -61,6 +61,15 @@ DATASETS = [
         "temperature_qc_field": "sea_water_temperature_qc_agg",
     },
     {
+        "name": "Cal Poly Pier",
+        "type": "Shore Station",
+        "server": "https://erddap.caloos.org/erddap",
+        "dataset_id": "san-luis-bay-cal-poly-pier-shore",
+        "temperature_field": "sea_water_temperature",
+        "temperature_qc_field": "sea_water_temperature_qc_agg",
+        "temperature_at_depth": -1,
+    },
+    {
         "name": "Moss Landing",
         "type": "Shore Station",
         "server": "https://erddap.caloos.org/erddap",
